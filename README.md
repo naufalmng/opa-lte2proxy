@@ -1,4 +1,4 @@
-# 🚀 OPA-LTE2PROXY
+<div align="center">
 
 ```text
  ██████╗ ██████╗  █████╗       ██╗  ████████╗███████╗██████╗ ██████╗  ██████╗ ██╗  ██╗██╗   ██╗
@@ -9,198 +9,215 @@
  ╚═════╝ ╚═╝     ╚═╝  ╚═╝      ╚══════╝╚═╝   ╚══════╝╚══════╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
 ```
 
-> **"Opa jagain proxy lo, gonta-ganti IP tanpa cabut colok."**  
-> *Framework Mobile Proxy SOCKS5 Berperforma Tinggi (Rust) dengan Auto IP-Cycling via ADB Airplane Mode & Failover Safety Guard.*
+# OPA-LTE2PROXY
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![Language: Rust](https://img.shields.io/badge/Language-Rust-orange.svg?style=for-the-badge&logo=rust)](https://www.rust-lang.org/)
+[![Platform: Linux](https://img.shields.io/badge/Platform-Linux-blue.svg?style=for-the-badge&logo=linux)](https://ubuntu.com/)
+[![Protocol: SOCKS5](https://img.shields.io/badge/Protocol-SOCKS5-green.svg?style=for-the-badge)](https://en.wikipedia.org/wiki/SOCKS)
+[![Status: Production](https://img.shields.io/badge/Status-Production-brightgreen.svg?style=for-the-badge)]()
+
+**[English](#-english) | [Bahasa Indonesia](#-bahasa-indonesia)**
+
+</div>
 
 ---
 
-## 📑 Daftar Isi / Table of Contents
-- [Tentang OPA-LTE2PROXY](#-tentang-opa-lte2proxy)
-- [Arsitektur & Failover Guard](#-arsitektur--failover-guard)
-- [Fitur Utama](#-fitur-utama)
-- [Cara Install & Deploy 24/7](#-cara-install--deploy-247)
-- [Perintah CLI (`olp`)](#-perintah-cli-olp)
-- [Cara Pakai Sticky Session](#-cara-pakai-sticky-session)
-- [REST Control API (Port 10808)](#-rest-control-api-port-10808)
-- [Integrasi Bot Farming (`ag29router`)](#-integrasi-bot-farming-ag29router)
-- [Troubleshooting & Log](#-troubleshooting--log)
+<a name="-english"></a>
+# 🇬🇧 English
+
+> **"Homemade Mobile Rotating Proxy 🐦‍🔥"**  
+> *A high-performance, self-hosted Rust framework that transforms standard Qualcomm 4G LTE USB dongles into enterprise-grade rotating mobile SOCKS5 proxies with hardware-free ADB airplane-mode IP-cycling and failover protection.*
 
 ---
 
-## 🌟 Tentang OPA-LTE2PROXY
+### ⚠️ Educational & Research Disclaimer
 
-**OPA-LTE2PROXY** adalah framework self-hosted yang mengubah modem USB 4G LTE fisik (Qualcomm UFI / Android MSM8916) menjadi **Rotating Mobile SOCKS5 Proxy** kelas enterprise. 
-
-Tidak perlu hardware switcher USB mahal atau repot cabut-colok modem fisik secara manual. Engine ini memanfaatkan interface **ADB (Android Debug Bridge)** internal modem untuk mentrigger **Airplane Mode cycle**, memaksa Base Transceiver Station (BTS) operator seluler (XL, Telkomsel, Indosat, Tri) merilis IP lama dan mengalokasikan **IP publik baru (CGNAT)** dalam waktu 5–15 detik.
-
-Ditulis dalam bahasa **Rust (Tokio async + Socket2)** dengan konsumsi memori kurang dari **1 MB RAM** dan performa zero-copy streaming.
-
----
-
-## 🛡️ Arsitektur & Failover Guard
-
-### 1. Egress Policy Routing Terisolasi (Table 200)
-Proxy mengunci seluruh koneksi outbound ke IP interface modem (`192.168.200.174`). Linux kernel meneruskan paket via Table 200 ke modem gateway `192.168.200.1`:
-- 100% traffic normal host (ISP rumah, Tailscale, SSH, Docker, background service) **tetap berjalan di Table main**.
-- Proxy dan failover server tidak saling mengganggu.
-
-### 2. Failover Safety Guard (Anti Server Down)
-Jika ISP rumah mati dan script failover server (`opa-isp2lte`) mengalihkan koneksi host ke modem LTE:
-- `OPA-LTE2PROXY` mendeteksi bahwa default route server sedang bertumpu pada modem.
-- Endpoint `/rotate` **otomatis terkunci** dan menolak rotasi IP agar koneksi SSH / remote server tidak mendadak terputus.
-- Jika pengguna tetap ingin merotasi, dapat mem-bypass dengan parameter `--force` atau `?force=true`.
+> **IMPORTANT NOTICE FOR SECURITY AUDITORS, LAW ENFORCEMENT, AND COMPLIANCE OFFICERS:**  
+> This software is strictly developed and released for **educational purposes, network engineering research, protocol analysis, and benign homelab testing**. It is designed to evaluate dynamic Carrier-Grade NAT (CGNAT) address allocations, multi-WAN homelab routing isolation, and cellular telemetry behavior in controlled private environments.  
+> 
+> The author does **not** condone, promote, or encourage any unlawful activities, unauthorized access, denial-of-service, automated credential abuse, spam, fraud, or violation of any telecommunication policies and national laws. The user assumes 100% full legal responsibility and liability for their operation and compliance with local regulations.
 
 ---
 
-## ⚡ Fitur Utama
+### 🌟 Key Features
 
-- **Ultra-Lightweight Rust Engine**: Footprint RAM < 1 MB, CPU idle 0%, start dalam hitungan milidetik.
-- **Hardware-Free IP Rotation**: Auto airplane mode toggle via ADB internal modem.
-- **Sticky Session Ready**: Mendukung autentikasi kredensial SOCKS5 format `user-session_X:password` untuk mengunci sesi per akun.
-- **Credential Rotation Trigger**: Mengirim username `user-rotate` di SOCKS5 otomatis memicu pergantian IP.
-- **Request-Count Auto-Rotate (`--rotate-every-reqs N`)**: Otomatis ganti IP setelah N request selesai.
-- **Time-Based Auto-Rotate (`--auto-rotate-mins N`)**: Otomatis ganti IP setiap N menit.
-- **REST Control API (`:10808`)**: Endpoint `/rotate`, `/status`, `/ip` untuk integrasi bot/script apa pun.
-- **Systemd Daemon 24/7**: Terintegrasi penuh dengan auto-start saat boot.
+- **Blazing Fast Rust Engine**: Built with `tokio` async runtime and `socket2`, consuming less than **1 MB RAM** with zero-copy bidirectional streaming.
+- **Hardware-Free IP Rotation**: Toggles cellular radio via ADB Airplane Mode cycle on Qualcomm MSM8916 dongles. Cellular carriers (XL/Telkomsel/Indosat) assign a **new public CGNAT IP** in 5–15 seconds without physical disconnects.
+- **Isolated Egress Policy Routing (Table 200)**: Outbound sockets are hard-bound to the modem interface IP (`192.168.200.174`). Host network traffic (ISP, Tailscale, SSH, Docker) remains untouched on the primary routing table.
+- **Failover Safety Guard (Anti-Downtime)**: Automatically monitors host default routes. If primary ISP fails and the server relies on the modem (`opa-isp2lte`), IP rotation is **locked** (`HTTP 423`) to prevent accidental host disconnections (bypassable with `--force`).
+- **Sticky Session Ready**: Supports standard commercial proxy session credentials (`socks5://user-session1:pass@127.0.0.1:10800`) and on-demand credential rotation (`user-rotate`).
+- **REST Control API (Port 10808)**: Trigger instant rotations via `POST /rotate`, inspect carrier telemetry via `GET /status`, or retrieve current cellular IP via `GET /ip`.
+- **Systemd Production Daemon**: Automatically managed 24/7 with zero-downtime restarts.
 
 ---
 
-## 🛠️ Cara Install & Deploy 24/7
+### 🏗️ Architecture & Topology
 
-Di direktori project `/opt/app/opa-lte2proxy/`:
+```mermaid
+graph TD
+    subgraph Client / Applications
+        Bot[Bot / Scraper / Browser]
+        Curl[CLI / Scripts]
+    end
+
+    subgraph Host Server Linux
+        Proxy[OPA-LTE2PROXY SOCKS5 :10800]
+        API[Control REST API :10808]
+        Guard[Failover Safety Guard]
+        Table200[Linux Routing Table 200]
+        ADB[Android Debug Bridge Daemon]
+    end
+
+    subgraph Hardware & Cellular
+        Modem[Qualcomm 4G UFI USB Dongle]
+        BTS[Cellular Base Station Tower]
+        Internet((Public Internet))
+    end
+
+    Bot -->|SOCKS5 Request| Proxy
+    Curl -->|POST /rotate| API
+    API --> Guard
+    Guard -->|Execute Airplane Mode| ADB
+    ADB -->|Toggle Radio| Modem
+    Proxy -->|Bind Egress 192.168.200.174| Table200
+    Table200 -->|Forward Traffic| Modem
+    Modem -->|LTE Data| BTS
+    BTS -->|Dynamic CGNAT IP| Internet
+```
+
+---
+
+### 🚀 Quick Start (English)
+
+#### 1. Installation
+Clone and run the automated installer:
 ```bash
+git clone https://github.com/naufalmng/opa-lte2proxy.git /opt/app/opa-lte2proxy
 cd /opt/app/opa-lte2proxy
-./install.sh
+chmod +x install.sh && ./install.sh
+```
+*The installer automatically compiles the release binary, creates the systemd service, configures Table 200 routing, and links the `olp` CLI shortcut.*
+
+#### 2. CLI Usage (`olp`)
+```bash
+# Check modem telemetry and proxy connections
+olp status
+
+# View current cellular public IP
+olp ip
+
+# Trigger immediate IP rotation via Airplane Mode cycle
+olp rotate
+
+# Force IP rotation during emergency server failover
+olp rotate --force
+
+# Inspect background systemd service status
+sudo systemctl status opa-lte2proxy
 ```
 
-Installer otomatis:
-1. Membuild binary release via `cargo build --release`.
-2. Memasang executable ke `/usr/local/bin/opa-lte2proxy` dan membuat symlink alias **`olp`**.
-3. Memasang config ke `/etc/opa-lte2proxy.conf`.
-4. Mengonfigurasi rule routing table 200.
-5. Memasang dan mengaktifkan service systemd `opa-lte2proxy.service` (berjalan 24/7).
-
----
-
-## 💻 Perintah CLI (`olp`)
-
-Framework menyediakan CLI shortcut **`olp`** yang bisa dipanggil dari mana saja:
-
-| Perintah | Deskripsi |
-| :--- | :--- |
-| `olp status` | Menampilkan telemetri operator, status sinyal, IP aktif, dan jumlah koneksi |
-| `olp ip` | Menampilkan IP seluler modem saat ini secara ringkas |
-| `olp rotate` | Memicu pergantian IP publik via Airplane Mode cycle |
-| `olp rotate --force` | Memaksa rotasi IP meskipun server sedang dalam mode failover darurat |
-| `olp rotate --session acc2` | Memicu rotasi dengan menandai session ID tertentu di log telemetri |
-| `sudo systemctl restart opa-lte2proxy` | Restart service proxy background |
-
----
-
-## 🔄 Cara Pakai Sticky Session
-
-Untuk mengelola farming ratusan akun tanpa terkena checkpoint Google/Instagram/TikTok:
-
-### 1. Sticky Sesi per Akun (On-Demand via REST API)
-Pola paling stabil untuk bot/worker paralel:
-1. Bot memproses akun #1 lewat `socks5://127.0.0.1:10800` (IP tetap sticky sepanjang login akun #1).
-2. Setelah akun #1 sukses/selesai, bot memanggil REST API:
-   ```bash
-   curl -X POST http://127.0.0.1:10808/rotate
-   ```
-3. Modem melakukan Airplane mode ~10 detik dan mendapatkan IP baru.
-4. Bot lanjut memproses akun #2 dengan IP seluler baru yang fresh!
-
-### 2. Sticky Sesi via Kredensial SOCKS5
-Dapat langsung disuplai ke tool atau browser antidetect yang mendukung format autentikasi:
+#### 3. Client Configuration
+Point any application, antidetect browser, or bot to the local SOCKS5 endpoint:
 ```text
-socks5://user-session_123:anypassword@127.0.0.1:10800
-```
-- Request dengan session ID yang sama dianggap satu sesi identitas.
-- Jika ingin memicu rotasi langsung dari browser/bot tanpa panggil API HTTP:
-  ```text
-  socks5://user-rotate:anypassword@127.0.0.1:10800
-  ```
-
----
-
-## 🌐 REST Control API (Port 10808)
-
-### `GET /status`
-Mengembalikan status lengkap sistem:
-```bash
-curl -s http://127.0.0.1:10808/status | jq .
-```
-```json
-{
-  "status": "online",
-  "modem": {
-    "connected": true,
-    "internal_ip": "10.3.13.96",
-    "operator": "XL",
-    "network_type": "LTE",
-    "pdp_active": true,
-    "rotation_count": 2,
-    "host_on_lte_failover": false
-  },
-  "proxy": {
-    "active_connections": 0,
-    "total_connections": 18,
-    "rotate_every_reqs": 0
-  }
-}
-```
-
-### `POST /rotate`
-Trigger pergantian IP langsung:
-```bash
-curl -s -X POST http://127.0.0.1:10808/rotate | jq .
-```
-```json
-{
-  "status": "success",
-  "old_ip": "10.5.84.210",
-  "new_ip": "10.3.13.96",
-  "duration_ms": 12942,
-  "rotation_count": 1,
-  "session": "default"
-}
+Host     : 127.0.0.1
+Port     : 10800
+Protocol : SOCKS5
 ```
 
 ---
 
-## 🤖 Integrasi Bot Farming (`ag29router`)
+### 🌐 REST Control API Reference
 
-Di file `/opt/garapan/ag29router/proxies.txt`, masukkan endpoint SOCKS5 lokal:
-```text
-socks5://127.0.0.1:10800
-```
+| Endpoint | Method | Description | Example Response |
+| :--- | :--- | :--- | :--- |
+| `/status` | `GET` | Telemetry, carrier info, IP, connections | `{"status":"online","modem":{"operator":"XL","internal_ip":"10.3.13.96"}}` |
+| `/ip` | `GET` | Current active cellular IP | `10.3.13.96` |
+| `/rotate` | `POST` / `GET` | Trigger Airplane Mode IP cycle | `{"status":"success","old_ip":"10.5.84.210","new_ip":"10.3.13.96","duration_ms":12942}` |
 
-Worker Camoufox akan otomatis merutekan Google OAuth headless lewat IP seluler kartu SIM modem.
+---
+---
+
+<a name="-bahasa-indonesia"></a>
+# 🇮🇩 Bahasa Indonesia
+
+> **"Mobile Rotating Proxy Rakitan Rumahan 🐦‍🔥"**  
+> *Framework mobile proxy SOCKS5 berbasis Rust performa tinggi yang mengubah modem USB 4G LTE Qualcomm menjadi proxy berputar kelas enterprise dengan auto-cycling IP via ADB Airplane Mode dan proteksi failover server.*
 
 ---
 
-## 🔍 Troubleshooting & Log
+### ⚠️ Catatan Edukasi & Penelitian Hukum
 
-Cek log service live:
+> **PERHATIAN PENTING BAGI AUDITOR KEAMANAN & APARAT PENEGAK HUKUM:**  
+> Software ini dibuat dan didistribusikan murni untuk **tujuan edukasi, riset rekayasa jaringan, analisis protokol komunikasi, serta pengujian infrastruktur homelab pribadi**. Framework ini ditujukan untuk mempelajari alokasi Carrier-Grade NAT (CGNAT) pada jaringan seluler, isolasi policy routing multi-WAN pada kernel Linux, dan telemetri perangkat IoT.  
+> 
+> Penulis **tidak mendukung, tidak memfasilitasi, dan melarang keras** segala bentuk penyalahgunaan alat ini untuk tindakan melawan hukum, akses tanpa izin, penipuan online, carding, brute force, spamming, atau pelanggaran UU ITE dan regulasi telekomunikasi nasional. Seluruh risiko penggunaan sepenuhnya menjadi tanggung jawab moral dan hukum pengguna.
+
+---
+
+### 🌟 Fitur Unggulan
+
+- **Engine Rust Super Ringan**: Dibangun dengan runtime asinkron `tokio` dan `socket2`, hanya menggunakan memori **< 1 MB RAM** dengan streaming dua arah zero-copy.
+- **Ganti IP Tanpa Cabut-Colok Fisik**: Memanfaatkan ADB internal modem Qualcomm MSM8916 untuk memicu cycle Airplane Mode. Operator seluler (XL/Axis/Telkomsel/Indosat/Tri) otomatis merilis IP lama dan memberikan **IP publik baru (CGNAT)** dalam waktu 5–15 detik.
+- **Policy Routing Terisolasi (Table 200)**: Seluruh socket proxy di-bind ke interface modem (`192.168.200.174`). Koneksi internet utama server (ISP rumah, Tailscale, SSH, Docker) **tetap 100% aman dan tidak terganggu** di tabel routing utama.
+- **Failover Safety Guard (Anti Server Down)**: Mendeteksi rute utama server secara real-time. Jika ISP rumah mati dan server sedang berjalan darurat via modem (`opa-isp2lte`), perintah rotasi IP **otomatis dikunci** (`HTTP 423`) agar koneksi SSH remote tidak mendadak terputus (dapat di-bypass dengan opsi `--force`).
+- **Mendukung Sticky Session**: Mendukung kredensial sesi ala proxy komersial (`socks5://user-session1:pass@127.0.0.1:10800`) dan perintah rotasi langsung via kredensial (`user-rotate`).
+- **REST Control API (Port 10808)**: Trigger rotasi instan via `POST /rotate`, cek sinyal & operator via `GET /status`, dan intip IP aktif via `GET /ip`.
+- **Systemd Daemon 24/7**: Berjalan otomatis di background dan aktif kembali saat server reboot.
+
+---
+
+### 🚀 Panduan Cepat (Bahasa Indonesia)
+
+#### 1. Instalasi Otomatis
+Jalankan script installer:
 ```bash
+git clone https://github.com/naufalmng/opa-lte2proxy.git /opt/app/opa-lte2proxy
+cd /opt/app/opa-lte2proxy
+chmod +x install.sh && ./install.sh
+```
+
+#### 2. Perintah CLI (`olp`)
+Shortcut CLI **`olp`** tersedia langsung di seluruh terminal server:
+```bash
+# Cek kondisi modem, operator, sinyal, dan status koneksi proxy
+olp status
+
+# Lihat IP seluler yang sedang aktif
+olp ip
+
+# Ganti IP seluler baru via Airplane Mode
+olp rotate
+
+# Paksa ganti IP meski server sedang dalam mode failover darurat
+olp rotate --force
+
+# Cek log service live di background
 sudo journalctl -u opa-lte2proxy -f
 ```
 
-Periksa apakah modem terdeteksi di ADB:
-```bash
-adb devices
-# Output harus muncul: 2285100c device
-```
+---
 
-Periksa rule routing table 200:
-```bash
-ip rule show | grep 200
-ip route show table 200
+### 📂 Struktur Direktori Project
+
+```text
+/opt/app/opa-lte2proxy/
+├── src/
+│   ├── main.rs          # CLI parser, banner ANSI Shadow & subcommands
+│   ├── socks5.rs        # SOCKS5 engine (socket2 egress bind + sticky auth)
+│   ├── modem.rs         # ADB Airplane mode cycler & Failover Guard
+│   └── api.rs           # Axum REST Control API
+├── Cargo.toml           # Dependensi Rust (Tokio, Axum, Socket2, Clap)
+├── install.sh           # Installer one-liner (Build, symlink, service, routing)
+├── run.sh               # Launcher script wrapper
+├── opa-lte2proxy.conf   # File konfigurasi utama
+├── opa-lte2proxy.service# Systemd service unit
+├── LICENSE              # Lisensi Open Source (MIT)
+└── README.md            # Dokumentasi lengkap (Bilingual EN/ID)
 ```
 
 ---
 
-<p align="center">
-  <b>OPA-LTE2PROXY</b> — Dibuat untuk ekosistem server Bojongkulur.
-</p>
+### 📜 Lisensi & Kontribusi
+
+Didistribusikan di bawah lisensi terbuka **MIT License**. Lihat file [LICENSE](LICENSE) untuk detail lengkap. Dibuat dan dirancang khusus untuk ekosistem server Bojongkulur.

@@ -1,5 +1,6 @@
 mod api;
 mod modem;
+mod setup;
 mod socks5;
 
 use clap::{Parser, Subcommand};
@@ -56,6 +57,10 @@ struct Cli {
 enum Commands {
     /// Jalankan service proxy daemon (default)
     Start,
+    /// Setup interaktif / wizard hardware pemindaian modem & interface
+    Setup,
+    /// Setup interaktif (alias)
+    Config,
     /// Trigger rotasi IP secara manual via REST API
     Rotate {
         #[arg(long)]
@@ -74,6 +79,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let cli = Cli::parse();
 
     match &cli.command {
+        Some(Commands::Setup) | Some(Commands::Config) => {
+            setup::run_interactive_setup()?;
+            return Ok(());
+        }
         Some(Commands::Rotate { force, session }) => {
             let client = reqwest::Client::new();
             let mut url = format!("http://{}/rotate", cli.api);

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Fal <nauxium>"]
 description = "High-performance Rust Rotating SOCKS5 Mobile Proxy with ADB Airplane Mode IP-Cycling and Failover Safety Guard"
+license = "GPL-3.0-or-later"
 
 [dependencies]
 tokio = { version = "1.38", features = ["full"] }

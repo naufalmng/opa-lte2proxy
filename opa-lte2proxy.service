@@ -1,0 +1,19 @@
+[Unit]
+Description=OPA-LTE2PROXY — Rotating SOCKS5 Mobile Proxy Engine (Rust)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=nauxium
+Group=nauxium
+WorkingDirectory=/opt/app/opa-lte2proxy
+Environment="RUST_LOG=info"
+ExecStartPre=-/usr/bin/sudo /usr/sbin/ip rule add from 192.168.200.174 table 200
+ExecStartPre=-/usr/bin/sudo /usr/sbin/ip route add default via 192.168.200.1 dev enx0202025b3531 table 200
+ExecStart=/opt/app/opa-lte2proxy/target/release/opa-lte2proxy start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

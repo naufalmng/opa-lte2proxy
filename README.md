@@ -64,18 +64,15 @@ irm https://raw.githubusercontent.com/naufalmng/opa-lte2proxy/main/install.ps1 |
 
 ---
 
-### 🔧 Interactive Proactive Setup Wizard (`olp setup`)
+### 🔧 All-in-One Interactive Setup (`olp setup`)
 
-Need to reconfigure interfaces or scan connected modems? Just run:
+Need to reconfigure interfaces, adjust subnets, or connect a new modem? Just run:
 ```bash
 olp setup
 ```
-The wizard will:
-1. **Auto-scan network interfaces** and highlight the modem interface (`192.168.200.x` / LTE).
-2. **Auto-detect ADB devices** (detects Qualcomm serial numbers like `2285100c`).
-3. **Prompt for ports** (SOCKS5 `:10800`, REST API `:10808`, auto-rotation timer).
-4. **Run live hardware & signal verification** (operator detection and response test).
-5. Save settings to `/etc/opa-lte2proxy.conf` and restart the service.
+The setup offers two flexible modes:
+- **[1] Auto-Detect Mode (Recommended)**: Automatically scans network interfaces, identifies cellular/LTE subnets and ADB devices (e.g. Qualcomm MSM8916), runs live signal tests, and prepares routing without manual guesswork.
+- **[2] Custom / Manual Mode**: Full control to select any network interface from a numbered list, define custom Gateway IPs (e.g. Huawei `192.168.8.1`, ZTE `192.168.0.1`, custom subnets), set static egress IPs, routing table IDs, and ADB serials without locking into any hardcoded setup.
 
 ---
 
@@ -182,18 +179,15 @@ irm https://raw.githubusercontent.com/naufalmng/opa-lte2proxy/main/install.ps1 |
 
 ---
 
-### 🔧 Wizard Setup Interaktif Proaktif (`olp setup`)
+### 🔧 All-in-One Interactive Setup (`olp setup`)
 
-Mau atur ulang interface atau baru colok modem baru? Cukup jalankan:
+Mau atur ulang interface, ganti modem, atau konfigurasi subnet kustom? Cukup jalankan:
 ```bash
 olp setup
 ```
-Wizard akan secara proaktif:
-1. **Memindai seluruh interface jaringan** dan otomatis mendeteksi interface modem LTE (`192.168.200.x`).
-2. **Memindai perangkat ADB** (otomatis mendeteksi serial Qualcomm seperti `2285100c`).
-3. **Menanyakan parameter konfigurasi** dengan nilai default yang tinggal ditekan ENTER.
-4. **Menjalankan uji koneksi live** (cek operator dan respon sinyal modem).
-5. Menyimpan ke `/etc/opa-lte2proxy.conf` dan me-restart service secara otomatis.
+Setup menyediakan 2 mode fleksibel:
+- **[1] Mode Auto-Detect (Rekomendasi)**: Memindai seluruh interface jaringan, mendeteksi kandidat modem LTE dan perangkat ADB secara otomatis, menjalankan uji koneksi operator langsung, serta menyiapkan konfigurasi tanpa tebak-tebak.
+- **[2] Mode Custom / Manual**: Kebebasan penuh memilih interface jaringan dari daftar bernomor, menentukan IP Gateway modem sendiri (misal Huawei `192.168.8.1`, ZTE `192.168.0.1`, subnet kantor/lab kustom), IP egress, table routing ID, serta serial ADB tanpa terkunci pada satu konfigurasi tertentu.
 
 ---
 

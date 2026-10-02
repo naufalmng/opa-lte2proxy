@@ -128,29 +128,53 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let cfg = setup::load_config_file();
+    let listen_addr: SocketAddr = cfg
+        .get("LISTEN_ADDR")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(cli.listen);
+    let egress_ip: IpAddr = cfg
+        .get("EGRESS_IP")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(cli.bind);
+    let api_addr: SocketAddr = cfg
+        .get("API_ADDR")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(cli.api);
+    let adb_id = cli.adb.or_else(|| cfg.get("ADB_SERIAL").cloned());
+    let auto_rotate_mins = cfg
+        .get("AUTO_ROTATE_MINS")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(cli.auto_rotate_mins);
+    let rotate_every_reqs = cfg
+        .get("ROTATE_EVERY_REQS")
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(cli.rotate_every_reqs);
+    let modem_iface = cfg.get("MODEM_IFACE").cloned();
+
     println!("{}", BANNER);
     println!(" 🚀 OPA-LTE2PROXY — Opa jagain proxy lo, gonta-ganti IP tanpa cabut colok.");
     println!(" -----------------------------------------------------------------------");
-    println!(" SOCKS5 Proxy  : {}", cli.listen);
-    println!(" Bound Egress  : {}", cli.bind);
-    println!(" Control API   : http://{}", cli.api);
-    if cli.auto_rotate_mins > 0 {
-        println!(" Auto-Rotate   : Tiap {} menit", cli.auto_rotate_mins);
+    println!(" SOCKS5 Proxy  : {}", listen_addr);
+    println!(" Bound Egress  : {}", egress_ip);
+    println!(" Control API   : http://{}", api_addr);
+    if auto_rotate_mins > 0 {
+        println!(" Auto-Rotate   : Tiap {} menit", auto_rotate_mins);
     } else {
         println!(" Auto-Rotate   : On-Demand (via /rotate atau credentials)");
     }
-    if cli.rotate_every_reqs > 0 {
-        println!(" Req-Rotate    : Tiap {} request selesai", cli.rotate_every_reqs);
+    if rotate_every_reqs > 0 {
+        println!(" Req-Rotate    : Tiap {} request selesai", rotate_every_reqs);
     }
     println!(" Failover Guard: Aktif (Kunci rotasi otomatis jika ISP rumah mati)");
     println!(" -----------------------------------------------------------------------\n");
 
-    let modem = modem::ModemController::new(cli.adb, None);
+    let modem = modem::ModemController::new(adb_id, modem_iface);
     let socks_server = Arc::new(socks5::Socks5Server::new(
-        cli.listen,
-        cli.bind,
+        listen_addr,
+        egress_ip,
         modem.clone(),
-        cli.rotate_every_reqs,
+        rotate_every_reqs,
     ));
 
     let app_state = api::AppState {
@@ -170,25 +194,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // 2. Spawn REST API Control Server
     let api_handle = {
-        let api_addr = cli.api;
+        let addr = api_addr;
         tokio::spawn(async move {
-            if let Err(e) = api::run_api_server(api_addr, app_state).await {
+            if let Err(e) = api::run_api_server(addr, app_state).await {
                 error!("REST API Server error: {}", e);
             }
         })
     };
 
     // 3. Optional Auto-Rotate Timer Loop
-    if cli.auto_rotate_mins > 0 {
+    if auto_rotate_mins > 0 {
         let modem_ctrl = modem.clone();
-        let interval_mins = cli.auto_rotate_mins;
+        let interval_mins = auto_rotate_mins;
         tokio::spawn(async move {
             let mut interval =
                 tokio::time::interval(std::time::Duration::from_secs(interval_mins * 60));
             interval.tick().await; // skip immediate first tick
             loop {
                 interval.tick().await;
-                info!("[Timer] Auto-rotating IP every {} minutes...", interval_mins);
+                info!(
+                    "[Timer] Auto-rotating IP every {} minutes...",
+                    interval_mins
+                );
                 if let Err(e) = modem_ctrl.rotate_ip(false).await {
                     error!("[Timer] Auto-rotation skipped/failed: {}", e);
                 }

@@ -63,7 +63,10 @@ async fn get_status(State(state): State<AppState>) -> impl IntoResponse {
 async fn get_ip(State(state): State<AppState>) -> impl IntoResponse {
     let ip = state.modem.get_internal_ip();
     if ip.is_empty() {
-        (StatusCode::SERVICE_UNAVAILABLE, "No cellular IP".to_string())
+        (
+            StatusCode::SERVICE_UNAVAILABLE,
+            "No cellular IP".to_string(),
+        )
     } else {
         (StatusCode::OK, ip)
     }
@@ -76,7 +79,10 @@ async fn trigger_rotate(
     let force = query.force.unwrap_or(false);
     let session = query.session.unwrap_or_else(|| "default".to_string());
 
-    info!("[API] Rotate requested (session='{}', force={})", session, force);
+    info!(
+        "[API] Rotate requested (session='{}', force={})",
+        session, force
+    );
 
     match state.modem.rotate_ip(force).await {
         Ok((old_ip, new_ip, elapsed_ms)) => (

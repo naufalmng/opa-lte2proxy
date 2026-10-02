@@ -49,7 +49,10 @@ impl ModemController {
 
     /// Cek apakah sistem server saat ini sedang failover ke LTE (ISP mati)
     pub fn is_host_on_lte_failover(&self) -> bool {
-        if let Ok(out) = Command::new("ip").args(["route", "show", "default"]).output() {
+        if let Ok(out) = Command::new("ip")
+            .args(["route", "show", "default"])
+            .output()
+        {
             let s = String::from_utf8_lossy(&out.stdout);
             return s.contains(&self.modem_iface) || s.contains("192.168.200.1");
         }
@@ -69,7 +72,17 @@ impl ModemController {
 
     pub fn get_internal_ip(&self) -> String {
         let out = Command::new("adb")
-            .args(["-s", &self.adb_id, "shell", "ip", "-o", "-4", "addr", "show", "rmnet0"])
+            .args([
+                "-s",
+                &self.adb_id,
+                "shell",
+                "ip",
+                "-o",
+                "-4",
+                "addr",
+                "show",
+                "rmnet0",
+            ])
             .output();
 
         if let Ok(o) = out {
@@ -111,16 +124,39 @@ impl ModemController {
         let t0 = Instant::now();
         let old_ip = self.get_internal_ip();
 
-        info!("Starting IP rotation via ADB Airplane Mode cycle on device {}...", self.adb_id);
+        info!(
+            "Starting IP rotation via ADB Airplane Mode cycle on device {}...",
+            self.adb_id
+        );
 
         // 1. Airplane mode ON
         let _ = tokio::process::Command::new("adb")
-            .args(["-s", &self.adb_id, "shell", "settings", "put", "global", "airplane_mode_on", "1"])
+            .args([
+                "-s",
+                &self.adb_id,
+                "shell",
+                "settings",
+                "put",
+                "global",
+                "airplane_mode_on",
+                "1",
+            ])
             .output()
             .await;
 
         let _ = tokio::process::Command::new("adb")
-            .args(["-s", &self.adb_id, "shell", "am", "broadcast", "-a", "android.intent.action.AIRPLANE_MODE", "--ez", "state", "true"])
+            .args([
+                "-s",
+                &self.adb_id,
+                "shell",
+                "am",
+                "broadcast",
+                "-a",
+                "android.intent.action.AIRPLANE_MODE",
+                "--ez",
+                "state",
+                "true",
+            ])
             .output()
             .await;
 
@@ -128,12 +164,32 @@ impl ModemController {
 
         // 2. Airplane mode OFF
         let _ = tokio::process::Command::new("adb")
-            .args(["-s", &self.adb_id, "shell", "settings", "put", "global", "airplane_mode_on", "0"])
+            .args([
+                "-s",
+                &self.adb_id,
+                "shell",
+                "settings",
+                "put",
+                "global",
+                "airplane_mode_on",
+                "0",
+            ])
             .output()
             .await;
 
         let _ = tokio::process::Command::new("adb")
-            .args(["-s", &self.adb_id, "shell", "am", "broadcast", "-a", "android.intent.action.AIRPLANE_MODE", "--ez", "state", "false"])
+            .args([
+                "-s",
+                &self.adb_id,
+                "shell",
+                "am",
+                "broadcast",
+                "-a",
+                "android.intent.action.AIRPLANE_MODE",
+                "--ez",
+                "state",
+                "false",
+            ])
             .output()
             .await;
 
@@ -160,10 +216,16 @@ impl ModemController {
         self.rotation_count.fetch_add(1, Ordering::Relaxed);
 
         if !new_ip.is_empty() {
-            info!("IP rotation successful: {} -> {} (took {}ms)", old_ip, new_ip, elapsed);
+            info!(
+                "IP rotation successful: {} -> {} (took {}ms)",
+                old_ip, new_ip, elapsed
+            );
             Ok((old_ip, new_ip, elapsed))
         } else {
-            warn!("IP rotation completed but IP was not refreshed (took {}ms)", elapsed);
+            warn!(
+                "IP rotation completed but IP was not refreshed (took {}ms)",
+                elapsed
+            );
             Ok((old_ip, "waiting_carrier".to_string(), elapsed))
         }
     }

@@ -116,13 +116,19 @@ async fn handle_connection(
 
         // If client sends username 'rotate' or 'user-rotate', trigger immediate IP rotation
         if username.to_lowercase().contains("rotate") {
-            info!("[Sticky Engine] Client requested explicit rotation via credentials ('{}')", username);
+            info!(
+                "[Sticky Engine] Client requested explicit rotation via credentials ('{}')",
+                username
+            );
             let m = modem.clone();
             tokio::spawn(async move {
                 let _ = m.rotate_ip(false).await;
             });
         } else {
-            debug!("[Sticky Engine] Sticky session identified: '{}'", session_id);
+            debug!(
+                "[Sticky Engine] Sticky session identified: '{}'",
+                session_id
+            );
         }
 
         // Accept any credentials (auth success)
@@ -144,7 +150,9 @@ async fn handle_connection(
 
     if cmd != 0x01 {
         // Only CONNECT is supported
-        client.write_all(&[0x05, 0x07, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await?;
+        client
+            .write_all(&[0x05, 0x07, 0x00, 0x01, 0, 0, 0, 0, 0, 0])
+            .await?;
         return Err("Command not supported".into());
     }
 
@@ -169,7 +177,9 @@ async fn handle_connection(
             IpAddr::V6(ip_buf.into()).to_string()
         }
         _ => {
-            client.write_all(&[0x05, 0x08, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await?;
+            client
+                .write_all(&[0x05, 0x08, 0x00, 0x01, 0, 0, 0, 0, 0, 0])
+                .await?;
             return Err("Address type not supported".into());
         }
     };
@@ -181,13 +191,17 @@ async fn handle_connection(
     let mut target_stream = match connect_via_egress(&target_str, egress_ip).await {
         Ok(s) => s,
         Err(e) => {
-            client.write_all(&[0x05, 0x01, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await?;
+            client
+                .write_all(&[0x05, 0x01, 0x00, 0x01, 0, 0, 0, 0, 0, 0])
+                .await?;
             return Err(e);
         }
     };
 
     // Reply Success
-    client.write_all(&[0x05, 0x00, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await?;
+    client
+        .write_all(&[0x05, 0x00, 0x00, 0x01, 0, 0, 0, 0, 0, 0])
+        .await?;
 
     // 4. Bi-directional Stream Forwarding
     copy_bidirectional(&mut client, &mut target_stream).await?;
